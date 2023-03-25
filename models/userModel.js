@@ -19,6 +19,9 @@ const userSchema = mongoose.Schema({
       ref: 'Account',
     },
   ],
+  isActive: {
+    type: Boolean,
+  },
 });
 
 module.exports = mongoose.model('User', userSchema);

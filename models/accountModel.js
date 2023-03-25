@@ -4,10 +4,14 @@ const accountSchema = mongoose.Schema({
   account_id: {
     type: mongoose.Schema.Types.ObjectId,
   },
+  owner_id: {
+    type: mongoose.Schema.Types.ObjectId,
+    required: [true, 'Owner is required!'],
+    ref: 'User',
+  },
   owner: {
     type: String,
-    required: [true, 'Owner is required!'],
-    // ref: 'User',
+    required: [true, 'Owner name is required!'],
   },
   cash: {
     type: Number,

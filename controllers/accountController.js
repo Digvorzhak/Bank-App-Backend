@@ -6,7 +6,7 @@ const Account = require('../models/accountModel');
 
 const getAllAccounts = asyncHandler(async (req, res) => {
   const accounts = await Account.find();
-  res.status(200).json(accounts);
+  res.status(200).json({ success: true, data: accounts });
 });
 
 //@desc Create New Account
@@ -14,13 +14,14 @@ const getAllAccounts = asyncHandler(async (req, res) => {
 //@access public
 
 const createAccount = asyncHandler(async (req, res) => {
-  const { cash, credit, owner } = req.body;
-  if (!cash || !credit || !owner) {
+  const { cash, credit, owner_id, owner } = req.body;
+  if (!cash || !credit || !owner || !owner_id) {
+    console.log(cash, credit, owner_id, owner);
     res.status(400);
     throw new Error('Please fill all fields.');
   }
-  const account = await Account.create({ cash, credit, owner });
-  res.status(201).json(account);
+  const account = await Account.create({ cash, credit, owner_id, owner });
+  res.status(201).json({ success: true, data: account });
 });
 
 //@desc Get an account
@@ -33,7 +34,7 @@ const getAccount = asyncHandler(async (req, res) => {
     res.status(404);
     throw new Error('Account not found.');
   }
-  res.status(200).json(account);
+  res.status(200).json({ success: true, data: account });
 });
 
 //@desc Update an account
@@ -53,7 +54,7 @@ const updateAccount = asyncHandler(async (req, res) => {
     { new: true }
   );
 
-  res.status(200).json(updatedAccount);
+  res.status(200).json({ success: true, data: updatedAccount });
 });
 
 //@desc Delete an account
@@ -67,7 +68,7 @@ const deleteAccount = asyncHandler(async (req, res) => {
     throw new Error('Account not found.');
   }
   await Account.deleteOne({ _id: req.params.id });
-  res.status(200).json(account);
+  res.status(200).json({ success: true, data: account });
 });
 
 const transferCash = asyncHandler(async (req, res) => {
