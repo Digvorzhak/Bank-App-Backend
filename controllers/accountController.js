@@ -1,5 +1,6 @@
 const asyncHandler = require('express-async-handler');
 const Account = require('../models/accountModel');
+const User = require('../models/userModel');
 //@desc Get all accounts
 //@route GET /api/v1/accounts
 //@access public
@@ -34,6 +35,7 @@ const getAccount = asyncHandler(async (req, res) => {
     res.status(404);
     throw new Error('Account not found.');
   }
+
   res.status(200).json({ success: true, data: account });
 });
 
@@ -42,10 +44,23 @@ const getAccount = asyncHandler(async (req, res) => {
 //@access public
 
 const updateAccount = asyncHandler(async (req, res) => {
+  res.status(500);
   const account = await Account.findById(req.params.id);
   if (!account) {
     res.status(404);
     throw new Error('Account not found.');
+  }
+
+  const user = await User.findById(account.owner_id);
+
+  if (!user) {
+    res.status(404);
+    throw new Error('Owner not found!');
+  }
+
+  if (user.isActive === false) {
+    res.status(403);
+    throw new Error('Account is not active. Bank methods are restricted.');
   }
 
   const updatedAccount = await Account.findByIdAndUpdate(
@@ -73,10 +88,35 @@ const deleteAccount = asyncHandler(async (req, res) => {
 
 const transferCash = asyncHandler(async (req, res) => {
   let accountSender = await Account.findById(req.params.id);
-  if (!accountSender) {
+  let accountReceiver = await Account.findById(req.body.to);
+  if (!accountSender || !accountReceiver) {
     res.status(404);
-    throw new Error('Account not found.');
+    throw new Error('One of the accounts is not found.');
   }
+  let senderUser = await User.findById(accountSender.owner_id);
+  let receiverUser = await User.findById(accountReceiver.owner_id);
+
+  console.log(accountSender.owner_id);
+  console.log(accountReceiver.owner_id);
+
+  if (!senderUser || !receiverUser) {
+    res.status(404);
+    throw new Error('One of the users is not found!');
+  }
+
+  if (senderUser.isActive === false) {
+    res.status(403);
+    throw new Error(
+      'The account you are trying to receive money from is not active. Bank methods are restricted from that account.'
+    );
+  }
+  if (receiverUser.isActive === false) {
+    res.status(403);
+    throw new Error(
+      'The account you are trying to send money to is not active. Bank methods are restricted from that account.'
+    );
+  }
+
   const amount = req.body.amount;
 
   if (accountSender.cash - amount < accountSender.credit * -1) {
@@ -91,7 +131,7 @@ const transferCash = asyncHandler(async (req, res) => {
       { new: true }
     );
     console.log(accountSender);
-    const accountReceiver = await Account.findByIdAndUpdate(
+    accountReceiver = await Account.findByIdAndUpdate(
       req.body.to,
       { $inc: { cash: amount } },
       { new: true }
