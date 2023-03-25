@@ -96,9 +96,6 @@ const transferCash = asyncHandler(async (req, res) => {
   let senderUser = await User.findById(accountSender.owner_id);
   let receiverUser = await User.findById(accountReceiver.owner_id);
 
-  console.log(accountSender.owner_id);
-  console.log(accountReceiver.owner_id);
-
   if (!senderUser || !receiverUser) {
     res.status(404);
     throw new Error('One of the users is not found!');
